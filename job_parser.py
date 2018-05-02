@@ -80,7 +80,7 @@ def company_detail_screen(driver, company):
     return address_info
 
 
-def info_about_vacancy(driver):
+def info_about_vacancy(driver, db):
     for link in find_all_vacancies(driver):
         driver.get(link)
         job_description = driver.find_element_by_class_name('b-vacancy').text
@@ -91,16 +91,21 @@ def info_about_vacancy(driver):
             address = address_details[0]
             address_url = address_details[1]
 
-            jobs_db.cursor().execute('''INSERT INTO Jobs (company, title, url, address, address_url) 
+            db.cursor().execute('''INSERT INTO Jobs (company, title, url, address, address_url) 
                                     VALUES (?, ?, ?, ?, ?)''', (company, title, link, address, address_url))
-            jobs_db.commit()
+            db.commit()
 
 
-driver = init()
-jobs_db = jobs_db_init()
-tap_on_more_button(driver)
-info_about_vacancy(driver)
-driver.quit()
+def main():
+    driver = init()
+    jobs_db = jobs_db_init()
+    tap_on_more_button(driver)
+    info_about_vacancy(driver, jobs_db)
+    driver.quit()
+
+
+if __name__ == "__main__":
+    main()
 
 
 

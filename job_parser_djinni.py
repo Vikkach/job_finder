@@ -20,15 +20,16 @@ def init():
     return driver
 
 
-def tap_on_next_button(driver):
+def tap_on_next_button(driver, url_links):
      driver.get(FRONT_PAGE)
-     find_all_vacancies_on_page(driver)
+     url_links = find_all_vacancies_on_page(driver, url_links)
      pager = driver.find_element_by_class_name('page-header').find_element_by_css_selector('h1').find_element_by_class_name('text-muted').text
      pages = int(int(pager)/15) + 1
      for i in range(2, pages):
          next_page = 'https://djinni.co/jobs/?page=' + str(i) + '&primary_keyword=QA&location=Киев'
          driver.get(next_page)
-         find_all_vacancies_on_page(driver)
+         url_links = find_all_vacancies_on_page(driver, url_links)
+     return url_links
 
 
 def jobs_db_init():
@@ -42,12 +43,13 @@ def jobs_db_init():
              url TEXT)''')
     return conn
 
-url_links = []
-def find_all_vacancies_on_page(driver):
+
+def find_all_vacancies_on_page(driver, url_links):
     job_list = driver.find_elements_by_class_name('list-jobs__title')
     for job in job_list:
         url_link = job.find_element_by_css_selector('a').get_attribute('href')
         url_links.append(url_link)
+    return url_links
 
 def company_name(driver):
     header = driver.find_element_by_class_name('page-header')
@@ -60,7 +62,7 @@ def job_title(driver):
     return title
 
 
-def info_about_vacancy(driver):
+def info_about_vacancy(driver, db, url_links):
     for link in url_links:
         driver.get(link)
         job_descriptions = driver.find_elements_by_class_name('profile-page-section')
@@ -70,16 +72,22 @@ def info_about_vacancy(driver):
         if KEY in job_description_full:
             company = company_name(driver)
             title = job_title(driver)
-            jobs_db.cursor().execute('''INSERT INTO Jobs (company, title, url) 
+            db.cursor().execute('''INSERT INTO Jobs (company, title, url) 
                                     VALUES (?, ?, ?)''', (company, title, link))
-            jobs_db.commit()
+            db.commit()
 
 
-driver = init()
-jobs_db = jobs_db_init()
-tap_on_next_button(driver)
-info_about_vacancy(driver)
-driver.quit()
+def main():
+    driver = init()
+    jobs_db = jobs_db_init()
+    url_links = []
+    tap_on_next_button(driver, url_links)
+    info_about_vacancy(driver, jobs_db, url_links)
+    driver.quit()
+
+
+if __name__ == "__main__":
+    main()
 
 
 
