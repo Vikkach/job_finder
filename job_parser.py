@@ -19,7 +19,7 @@ def init():
     return driver
 
 
-def get_list_of_all_vacancies(driver):
+def tap_on_more_button(driver):
     driver.get(FRONT_PAGE)
     while True:
         try:
@@ -98,7 +98,7 @@ def info_about_vacancy(driver):
 
 driver = init()
 jobs_db = jobs_db_init()
-get_list_of_all_vacancies(driver)
+tap_on_more_button(driver)
 info_about_vacancy(driver)
 driver.quit()
 
